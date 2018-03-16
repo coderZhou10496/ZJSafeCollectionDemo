@@ -51,6 +51,22 @@ void ZJSafeCollectionLog(NSString*fmt,...) {
     }
     return [self zj_objectAtIndex:index];
 }
+- (id)zj_NSArray0objectAtIndex:(NSUInteger)index {
+    
+    if(index >= self.count) {
+        ZJSafeCollectionLog(@"[%@ %@]: index {%zd} beyond bounds [0...%zd]",NSStringFromClass([self class]),NSStringFromSelector(_cmd),index,MAX(self.count - 1, 0));
+        return nil;
+    }
+    return [self zj_NSArray0objectAtIndex:index];
+}
+- (id)zj_NSSingleObjectArrayIobjectAtIndex:(NSUInteger)index {
+    
+    if(index >= self.count) {
+        ZJSafeCollectionLog(@"[%@ %@]: index {%zd} beyond bounds [0...%zd]",NSStringFromClass([self class]),NSStringFromSelector(_cmd),index,MAX(self.count - 1, 0));
+        return nil;
+    }
+    return [self zj_NSSingleObjectArrayIobjectAtIndex:index];
+}
 -(id)zj_objectAtIndexedSubscript:(NSUInteger)index {
     if(index >= self.count) {
         ZJSafeCollectionLog(@"[%@ %@] index {%zd} beyond bounds [0...%zd]",NSStringFromClass([self class]),NSStringFromSelector(_cmd),index,MAX(self.count - 1, 0));
@@ -72,6 +88,9 @@ void ZJSafeCollectionLog(NSString*fmt,...) {
     }
     return [self zj_objectAtIndex:index];
 }
+
+
+
 - (id)zj_objectAtIndexedSubscript:(NSUInteger)index {
     
     if(index >= self.count) {
@@ -188,7 +207,13 @@ void ZJSafeCollectionLog(NSString*fmt,...) {
     static dispatch_once_t  once;
     dispatch_once(&once, ^{
         // NSArray
+        // __NSSingleObjectArrayI __NSArray0
         ZJSwizzleMethod(NSClassFromString(@"__NSPlaceholderArray"), @selector(initWithObjects:count:), @selector(zj_initWithObjects:count:));
+        
+        ZJSwizzleMethod(NSClassFromString(@"__NSArray0"), @selector(objectAtIndex:), @selector(zj_NSArray0objectAtIndex:));
+        ZJSwizzleMethod(NSClassFromString(@"__NSSingleObjectArrayI"), @selector(objectAtIndex:), @selector(zj_NSSingleObjectArrayIobjectAtIndex:));
+        
+        
         ZJSwizzleMethod(NSClassFromString(@"__NSArrayI"), @selector(objectAtIndex:), @selector(zj_objectAtIndex:));
         ZJSwizzleMethod(NSClassFromString(@"__NSArrayI"), @selector(objectAtIndexedSubscript:), @selector(zj_objectAtIndexedSubscript:));
         
@@ -203,11 +228,11 @@ void ZJSafeCollectionLog(NSString*fmt,...) {
         // NSDictionary
         ZJSwizzleMethod(NSClassFromString(@"__NSPlaceholderDictionary"), @selector(initWithObjects:forKeys:count:), @selector(zj_initWithObjects:forKeys:count:));
         
-       // NSMutableDictionary
+        // NSMutableDictionary
         ZJSwizzleMethod(NSClassFromString(@"__NSDictionaryM"), @selector(setObject:forKey:), @selector(zj_setObject:forKey:));
         ZJSwizzleMethod(NSClassFromString(@"__NSDictionaryM"), @selector(setValue:forKey:), @selector(zj_setValue:forKey:));
         ZJSwizzleMethod(NSClassFromString(@"__NSDictionaryM"), @selector(removeObjectForKey:), @selector(zj_removeObjectForKey:));
-
+        
     });
 }
 + (void)setLogEnabled:(BOOL)enabled {
@@ -226,10 +251,10 @@ void ZJSwizzleMethod(Class c, SEL origSEL, SEL newSEL) {
         }
     }
     if(class_addMethod(c, origSEL, method_getImplementation(newMethod), method_getTypeEncoding(newMethod))){
-            
+        
         class_replaceMethod(c, newSEL, method_getImplementation(origMethod), method_getTypeEncoding(origMethod));
     }else{
-            
+        
         method_exchangeImplementations(origMethod, newMethod);
     }
 }
